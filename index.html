@@ -26,7 +26,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
 .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .button { padding: 10px 16px; background: #5A7D6E; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600; width: 100%; }
+.button-secondary { background: #8B7355; }
 .record-list { display: flex; flex-direction: column; gap: 12px; }
 .record-item { background: #f5f3f0; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
 .record-client { font-weight: 500; font-size: 14px; }
@@ -34,6 +36,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .record-value { font-size: 16px; font-weight: 500; text-align: right; }
 .empty-state { text-align: center; padding: 2rem 1rem; color: #999; }
 .btn-delete { background: #d9534f; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
+.btn-small { background: #999; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
+.product-item { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.product-info { flex: 1; }
+.product-name { font-weight: 500; font-size: 14px; }
+.product-qty { font-size: 12px; color: #999; }
+.product-price { font-size: 14px; font-weight: 600; }
+.total-box { background: #5A7D6E; color: white; padding: 16px; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; }
+.total-label { font-size: 12px; opacity: 0.9; }
+.total-value { font-size: 24px; font-weight: 600; }
+.badge { display: inline-block; padding: 2px 8px; background: #e8ddd6; color: #666; border-radius: 12px; font-size: 11px; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -66,11 +78,48 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <div id="pedidos" class="tab-content">
     <h2 style="font-size: 16px; margin-bottom: 1rem;">Novo Pedido</h2>
     <div class="form-group"><label>Data</label><input type="date" id="pedidoData" /></div>
-    <div class="form-group"><label>Cliente</label><input type="text" id="pedidoCliente" placeholder="Nome" /></div>
-    <div class="form-group"><label>Produto</label><input type="text" id="pedidoProduto" placeholder="Produto" /></div>
-    <div class="form-group"><label>Valor (R$)</label><input type="number" id="pedidoValor" min="0" step="0.01" /></div>
-    <button class="button" onclick="salvarPedido()">Registrar</button>
-    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Histórico</h2>
+    <div class="form-group"><label>Cliente</label><input type="text" id="pedidoCliente" placeholder="Nome" list="clientesList" /></div>
+    <datalist id="clientesList"></datalist>
+
+    <h3 style="font-size: 14px; margin-top: 1.5rem; margin-bottom: 1rem;">Adicionar Produtos</h3>
+    <div class="form-group"><label>Produto</label><input type="text" id="produtoNome" placeholder="Ex: Pão Francês" /></div>
+    <div class="form-row">
+      <div class="form-group"><label>Quantidade</label><input type="number" id="produtoQtd" min="1" value="1" /></div>
+      <div class="form-group"><label>Valor (R$)</label><input type="number" id="produtoValor" min="0" step="0.01" /></div>
+    </div>
+    <button class="button button-secondary" onclick="adicionarProduto()">+ Adicionar Produto</button>
+
+    <div id="produtosAdicionados" style="margin-top: 1.5rem;"></div>
+
+    <div class="total-box" id="totalBox" style="display: none;">
+      <div class="total-label">Total do Pedido</div>
+      <div class="total-value" id="totalPedido">R$ 0,00</div>
+    </div>
+
+    <h3 style="font-size: 14px; margin-bottom: 1rem;">Detalhes Finais</h3>
+    <div class="form-group">
+      <label>Tipo de Pagamento</label>
+      <select id="tipoPagamento">
+        <option value="">Selecione...</option>
+        <option value="Pix">Pix</option>
+        <option value="Dinheiro">Dinheiro</option>
+        <option value="Cartão">Cartão</option>
+        <option value="Transferência">Transferência</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Forma de Entrega</label>
+      <select id="formaEntrega">
+        <option value="">Selecione...</option>
+        <option value="Buscar">Cliente Busca</option>
+        <option value="Entregar">Entregar</option>
+      </select>
+    </div>
+
+    <button class="button" onclick="salvarPedido()" style="margin-top: 1.5rem;">Registrar Pedido</button>
+
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 2rem;">Histórico de Pedidos</h2>
     <div id="listaPedidos" class="record-list"></div>
   </div>
 
@@ -78,29 +127,44 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <h2 style="font-size: 16px; margin-bottom: 1rem;">Novo Cliente</h2>
     <div class="form-group"><label>Nome</label><input type="text" id="clienteNome" placeholder="Nome completo" /></div>
     <div class="form-group"><label>Telefone</label><input type="tel" id="clienteTel" /></div>
-    <button class="button" onclick="salvarCliente()">Salvar</button>
-    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Clientes</h2>
+    <button class="button" onclick="salvarCliente()">Salvar Cliente</button>
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Clientes Cadastrados</h2>
     <div id="listaClientes" class="record-list"></div>
   </div>
 
   <div id="relatorios" class="tab-content">
-    <h2 style="font-size: 16px; margin-bottom: 1rem;">Análise</h2>
+    <h2 style="font-size: 16px; margin-bottom: 1rem;">Análise Geral</h2>
     <div class="metric-grid">
       <div class="metric-card"><div class="metric-label">Faturamento</div><div class="metric-value" id="relFaturamento">R$ 0</div></div>
       <div class="metric-card"><div class="metric-label">Pedidos</div><div class="metric-value" id="relPedidos">0</div></div>
       <div class="metric-card"><div class="metric-label">Ticket Médio</div><div class="metric-value" id="relTicket">R$ 0</div></div>
     </div>
+
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Pagamentos</h2>
+    <div id="pagamentoStats" class="record-list"></div>
+
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Entregas</h2>
+    <div id="entregaStats" class="record-list"></div>
+
     <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Top Clientes</h2>
     <div id="topClientes" class="record-list"></div>
+
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Produtos Mais Vendidos</h2>
+    <div id="topProdutos" class="record-list"></div>
   </div>
 </div>
 
 <script>
-let app = { pedidos: [], clientes: [] };
+let app = { pedidos: [], clientes: [], produtos: [] };
+let pedidoTemp = { itens: [] };
 
 function init() {
   const saved = localStorage.getItem('bordaAltaApp');
   if (saved) app = JSON.parse(saved);
+  
+  const hoje = new Date().toISOString().split('T')[0];
+  document.getElementById('pedidoData').value = hoje;
+  
   atualizar();
 }
 
@@ -112,42 +176,152 @@ function switchTab(tab) {
   if (tab === 'relatorios') renderRelatorios();
 }
 
+function adicionarProduto() {
+  const nome = document.getElementById('produtoNome').value.trim();
+  const qtd = parseInt(document.getElementById('produtoQtd').value) || 1;
+  const valor = parseFloat(document.getElementById('produtoValor').value) || 0;
+  
+  if (!nome || valor === 0) {
+    alert('Preencha produto e valor');
+    return;
+  }
+  
+  pedidoTemp.itens.push({ nome, qtd, valor, subtotal: qtd * valor });
+  
+  document.getElementById('produtoNome').value = '';
+  document.getElementById('produtoQtd').value = '1';
+  document.getElementById('produtoValor').value = '';
+  
+  renderProdutosTemp();
+}
+
+function renderProdutosTemp() {
+  const container = document.getElementById('produtosAdicionados');
+  
+  if (pedidoTemp.itens.length === 0) {
+    container.innerHTML = '';
+    document.getElementById('totalBox').style.display = 'none';
+    return;
+  }
+  
+  const total = pedidoTemp.itens.reduce((s, i) => s + i.subtotal, 0);
+  
+  container.innerHTML = `
+    <h3 style="font-size: 13px; margin-bottom: 12px; color: #666;">Produtos no Pedido</h3>
+    ${pedidoTemp.itens.map((item, i) => `
+      <div class="product-item">
+        <div class="product-info">
+          <div class="product-name">${item.nome}</div>
+          <div class="product-qty">${item.qtd}x R$ ${item.valor.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}</div>
+        </div>
+        <button class="btn-delete" onclick="removerProdutoTemp(${i})">Remover</button>
+      </div>
+    `).join('')}
+  `;
+  
+  document.getElementById('totalBox').style.display = 'block';
+  document.getElementById('totalPedido').textContent = 'R$ ' + total.toFixed(2);
+}
+
+function removerProdutoTemp(index) {
+  pedidoTemp.itens.splice(index, 1);
+  renderProdutosTemp();
+}
+
+function salvarPedido() {
+  const data = document.getElementById('pedidoData').value;
+  const cliente = document.getElementById('pedidoCliente').value.trim();
+  const pagamento = document.getElementById('tipoPagamento').value;
+  const entrega = document.getElementById('formaEntrega').value;
+  
+  if (!cliente || !pagamento || !entrega || pedidoTemp.itens.length === 0) {
+    alert('Preencha todos os campos e adicione produtos');
+    return;
+  }
+  
+  const total = pedidoTemp.itens.reduce((s, i) => s + i.subtotal, 0);
+  
+  app.pedidos.push({
+    id: Date.now(),
+    data,
+    cliente,
+    itens: [...pedidoTemp.itens],
+    total,
+    pagamento,
+    entrega
+  });
+  
+  if (!app.clientes.find(c => c.nome === cliente)) {
+    app.clientes.push({ id: Date.now(), nome: cliente, telefone: '' });
+  }
+  
+  pedidoTemp.itens = [];
+  document.getElementById('pedidoCliente').value = '';
+  document.getElementById('tipoPagamento').value = '';
+  document.getElementById('formaEntrega').value = '';
+  renderProdutosTemp();
+  
+  atualizar();
+  alert('Pedido registrado com sucesso!');
+}
+
 function atualizar() {
-  const total = app.pedidos.reduce((s, p) => s + (p.valor || 0), 0);
+  const total = app.pedidos.reduce((s, p) => s + (p.total || 0), 0);
   document.getElementById('dashFaturamento').textContent = 'R$ ' + total.toFixed(2);
   document.getElementById('dashPedidos').textContent = app.pedidos.length;
   document.getElementById('dashClientes').textContent = new Set(app.pedidos.map(p => p.cliente)).size;
   document.getElementById('dashTicket').textContent = 'R$ ' + (total / app.pedidos.length || 0).toFixed(2);
   
   const ultimos = app.pedidos.slice(-5).reverse();
-  document.getElementById('ultimosPedidos').innerHTML = ultimos.map(p => `<div class="record-item"><div><div class="record-client">${p.cliente}</div><div class="record-details">${p.data} • ${p.produto}</div></div><div class="record-value">R$ ${p.valor.toFixed(2)}</div></div>`).join('') || '<div class="empty-state">Sem pedidos</div>';
+  document.getElementById('ultimosPedidos').innerHTML = ultimos.map(p => `
+    <div class="record-item">
+      <div>
+        <div class="record-client">${p.cliente}</div>
+        <div class="record-details">${p.data} • ${p.itens.length} produto(s) • ${p.entrega}</div>
+        <div style="margin-top: 4px;">
+          <span class="badge">${p.pagamento}</span>
+          <span class="badge">${p.entrega}</span>
+        </div>
+      </div>
+      <div class="record-value">R$ ${p.total.toFixed(2)}</div>
+    </div>
+  `).join('') || '<div class="empty-state">Sem pedidos</div>';
   
   renderPedidos();
   renderClientes();
+  atualizarClientesList();
   salvar();
 }
 
-function salvarPedido() {
-  const data = document.getElementById('pedidoData').value;
-  const cliente = document.getElementById('pedidoCliente').value;
-  const produto = document.getElementById('pedidoProduto').value;
-  const valor = parseFloat(document.getElementById('pedidoValor').value) || 0;
-  if (!cliente || !produto || valor === 0) { alert('Preencha os campos'); return; }
-  app.pedidos.push({ id: Date.now(), data, cliente, produto, valor });
-  document.getElementById('pedidoData').value = document.getElementById('pedidoCliente').value = document.getElementById('pedidoProduto').value = document.getElementById('pedidoValor').value = '';
-  atualizar();
-}
-
 function renderPedidos() {
-  document.getElementById('listaPedidos').innerHTML = app.pedidos.reverse().map(p => `<div class="record-item"><div><div class="record-client">${p.cliente}</div><div class="record-details">${p.data} • ${p.produto}</div></div><div style="text-align: right;"><div class="record-value">R$ ${p.valor.toFixed(2)}</div><button class="btn-delete" onclick="deletarPedido(${p.id})">Deletar</button></div></div>`).join('') || '<div class="empty-state">Sem pedidos</div>';
+  document.getElementById('listaPedidos').innerHTML = app.pedidos.slice().reverse().map(p => `
+    <div class="record-item">
+      <div style="flex: 1;">
+        <div class="record-client">${p.cliente}</div>
+        <div class="record-details" style="margin-top: 6px;">
+          <strong>${p.data}</strong> • ${p.pagamento} • ${p.entrega}
+        </div>
+        <div style="font-size: 12px; color: #666; margin-top: 6px;">
+          ${p.itens.map(i => `${i.nome} (${i.qtd}x)`).join(', ')}
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div class="record-value">R$ ${p.total.toFixed(2)}</div>
+        <button class="btn-delete" onclick="deletarPedido(${p.id})" style="margin-top: 6px;">Deletar</button>
+      </div>
+    </div>
+  `).join('') || '<div class="empty-state">Sem pedidos</div>';
 }
 
 function deletarPedido(id) {
-  if (confirm('Deletar?')) { app.pedidos = app.pedidos.filter(p => p.id !== id); atualizar(); }
+  if (confirm('Deletar este pedido?')) {
+    app.pedidos = app.pedidos.filter(p => p.id !== id);
+    atualizar();
+  }
 }
 
 function salvarCliente() {
-  const nome = document.getElementById('clienteNome').value;
+  const nome = document.getElementById('clienteNome').value.trim();
   if (!nome) { alert('Digite o nome'); return; }
   if (!app.clientes.find(c => c.nome === nome)) {
     app.clientes.push({ id: Date.now(), nome, telefone: document.getElementById('clienteTel').value });
@@ -157,23 +331,70 @@ function salvarCliente() {
 }
 
 function renderClientes() {
-  document.getElementById('listaClientes').innerHTML = app.clientes.map(c => `<div class="record-item"><div class="record-client">${c.nome}</div><button class="btn-delete" onclick="deletarCliente(${c.id})">Deletar</button></div>`).join('') || '<div class="empty-state">Sem clientes</div>';
+  document.getElementById('listaClientes').innerHTML = app.clientes.map(c => `
+    <div class="record-item">
+      <div><div class="record-client">${c.nome}</div><div class="record-details">${c.telefone || 'Sem telefone'}</div></div>
+      <button class="btn-delete" onclick="deletarCliente(${c.id})">Deletar</button>
+    </div>
+  `).join('') || '<div class="empty-state">Sem clientes</div>';
 }
 
 function deletarCliente(id) {
   if (confirm('Deletar?')) { app.clientes = app.clientes.filter(c => c.id !== id); atualizar(); }
 }
 
+function atualizarClientesList() {
+  const list = document.getElementById('clientesList');
+  list.innerHTML = app.clientes.map(c => `<option value="${c.nome}">`).join('');
+}
+
 function renderRelatorios() {
-  const total = app.pedidos.reduce((s, p) => s + (p.valor || 0), 0);
+  const total = app.pedidos.reduce((s, p) => s + (p.total || 0), 0);
   document.getElementById('relFaturamento').textContent = 'R$ ' + total.toFixed(2);
   document.getElementById('relPedidos').textContent = app.pedidos.length;
   document.getElementById('relTicket').textContent = 'R$ ' + (total / app.pedidos.length || 0).toFixed(2);
   
+  // Estatísticas de pagamento
+  const pagMap = {};
+  app.pedidos.forEach(p => {
+    if (!pagMap[p.pagamento]) pagMap[p.pagamento] = 0;
+    pagMap[p.pagamento] += p.total;
+  });
+  document.getElementById('pagamentoStats').innerHTML = Object.entries(pagMap).map(([tipo, val]) => 
+    `<div class="record-item"><div class="record-client">${tipo}</div><div class="record-value">R$ ${val.toFixed(2)}</div></div>`
+  ).join('') || '<p class="empty-state">Sem dados</p>';
+  
+  // Estatísticas de entrega
+  const entMap = {};
+  app.pedidos.forEach(p => {
+    if (!entMap[p.entrega]) entMap[p.entrega] = 0;
+    entMap[p.entrega] += p.total;
+  });
+  document.getElementById('entregaStats').innerHTML = Object.entries(entMap).map(([tipo, val]) => 
+    `<div class="record-item"><div class="record-client">${tipo}</div><div class="record-value">R$ ${val.toFixed(2)}</div></div>`
+  ).join('') || '<p class="empty-state">Sem dados</p>';
+  
+  // Top clientes
   const clientesMap = {};
-  app.pedidos.forEach(p => { if (!clientesMap[p.cliente]) clientesMap[p.cliente] = 0; clientesMap[p.cliente] += p.valor; });
-  const topCli = Object.entries(clientesMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  document.getElementById('topClientes').innerHTML = topCli.map(([c, v]) => `<div class="record-item"><div class="record-client">${c}</div><div class="record-value">R$ ${v.toFixed(2)}</div></div>`).join('') || '<p class="empty-state">Sem dados</p>';
+  app.pedidos.forEach(p => {
+    if (!clientesMap[p.cliente]) clientesMap[p.cliente] = 0;
+    clientesMap[p.cliente] += p.total;
+  });
+  document.getElementById('topClientes').innerHTML = Object.entries(clientesMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([c, v]) => 
+    `<div class="record-item"><div class="record-client">${c}</div><div class="record-value">R$ ${v.toFixed(2)}</div></div>`
+  ).join('') || '<p class="empty-state">Sem dados</p>';
+  
+  // Top produtos
+  const prodMap = {};
+  app.pedidos.forEach(p => {
+    p.itens.forEach(i => {
+      if (!prodMap[i.nome]) prodMap[i.nome] = 0;
+      prodMap[i.nome] += i.qtd;
+    });
+  });
+  document.getElementById('topProdutos').innerHTML = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([prod, qtd]) => 
+    `<div class="record-item"><div class="record-client">${prod}</div><div class="record-value">${qtd} unid.</div></div>`
+  ).join('') || '<p class="empty-state">Sem dados</p>';
 }
 
 function salvar() {
@@ -184,3 +405,4 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
+
