@@ -7,292 +7,180 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Borda Alta" />
-<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Padoca%20Borda%20Alta%20-%20Gest%C3%A3o%22,%22short_name%22:%22Borda%20Alta%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%235A7D6E%22,%22theme_color%22:%22%238B7355%22,%22orientation%22:%22portrait%22}" />
 <title>Borda Alta - Gestão</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --verde-musgo: #5A7D6E;
-  --kraft: #8B7355;
-  --branco: #FEFDFB;
-  --cinza-claro: #F5F3F0;
-  --cinza-escuro: #6B6B6B;
-}
-
-html, body {
-  width: 100%;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--branco);
-  color: var(--cinza-escuro);
-  overflow: hidden;
-}
-
-body {
-  display: flex;
-  flex-direction: column;
-  padding-top: max(0px, env(safe-area-inset-top));
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
-
-.app-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.header {
-  background: var(--verde-musgo);
-  color: var(--branco);
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.header h1 { font-size: 18px; font-weight: 600; margin-bottom: 0.25rem; }
-.header .sync-status {
-  font-size: 12px;
-  opacity: 0.9;
-  margin-top: 0.5rem;
-}
-
-.sync-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-  background: #90EE90;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 1rem;
-}
-
-.iframe-wrapper {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-.modal-sync {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.modal-sync.active { display: flex; }
-
-.modal-sync-content {
-  background: var(--branco);
-  border-radius: 12px;
-  padding: 1.5rem;
-  text-align: center;
-  max-width: 300px;
-}
-
-.sync-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--cinza-claro);
-  border-top: 3px solid var(--kraft);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.toast {
-  position: fixed;
-  bottom: 2rem;
-  left: 1rem;
-  right: 1rem;
-  background: var(--kraft);
-  color: var(--branco);
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transform: translateY(200px);
-  transition: transform 0.3s ease;
-  z-index: 900;
-  padding-bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom)));
-}
-
-.toast.show { transform: translateY(0); }
-
-.settings-btn {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: var(--kraft);
-  color: var(--branco);
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding-bottom: max(0px, env(safe-area-inset-bottom));
-  padding-right: max(0px, env(safe-area-inset-right));
-}
-
-.settings-btn:active { transform: scale(0.95); }
-
-.modal-settings {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 1001;
-  align-items: center;
-  justify-content: center;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.modal-settings.active { display: flex; }
-
-.modal-settings-content {
-  background: var(--branco);
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 400px;
-  max-height: 80vh;
-  overflow-y: auto;
-  padding-bottom: max(1.5rem, calc(1.5rem + env(safe-area-inset-bottom)));
-  padding-right: max(0px, calc(1.5rem + env(safe-area-inset-right)));
-}
-
-.modal-settings-content h2 {
-  margin-bottom: 1rem;
-  color: var(--verde-musgo);
-  font-size: 18px;
-}
-
-.settings-group {
-  margin-bottom: 1.5rem;
-}
-
-.settings-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--kraft);
-  margin-bottom: 0.5rem;
-}
-
-.settings-group input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--cinza-claro);
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.settings-group select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--cinza-claro);
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.btn-group {
-  display: flex;
-  gap: 8px;
-  margin-top: 1rem;
-}
-
-.btn {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background: var(--verde-musgo);
-  color: var(--branco);
-}
-
-.btn-primary:active { opacity: 0.9; }
-
-.btn-secondary {
-  background: var(--cinza-claro);
-  color: var(--cinza-escuro);
-}
-
-.btn-secondary:active { opacity: 0.8; }
-
-.info-text {
-  font-size: 12px;
-  color: #666;
-  margin-top: 0.5rem;
-  text-align: center;
-}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FEFDFB; color: #6B6B6B; }
+.container { max-width: 100%; min-height: 100vh; padding: 1rem; display: flex; flex-direction: column; }
+.header { background: #5A7D6E; color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; }
+.header h1 { font-size: 24px; margin-bottom: 0.5rem; }
+.tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; overflow-x: auto; }
+.tab-btn { flex: 1; padding: 12px; border: none; background: #f5f3f0; color: #999; font-size: 13px; cursor: pointer; border-radius: 6px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab-btn.active { background: #5A7D6E; color: white; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.metric-card { background: #f5f3f0; border-radius: 8px; padding: 1rem; }
+.metric-label { font-size: 12px; color: #999; margin-bottom: 8px; }
+.metric-value { font-size: 20px; font-weight: 500; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.button { padding: 10px 16px; background: #5A7D6E; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600; width: 100%; }
+.record-list { display: flex; flex-direction: column; gap: 12px; }
+.record-item { background: #f5f3f0; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+.record-client { font-weight: 500; font-size: 14px; }
+.record-details { font-size: 12px; color: #999; margin-top: 4px; }
+.record-value { font-size: 16px; font-weight: 500; text-align: right; }
+.empty-state { text-align: center; padding: 2rem 1rem; color: #999; }
+.btn-delete { background: #d9534f; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
 </style>
 </head>
 <body>
-<div class="app-container">
+<div class="container">
   <div class="header">
     <h1>🍞 Borda Alta</h1>
     <p>Sistema de Gestão</p>
-    <div class="sync-status">
-      <span class="sync-indicator"></span>
-      <span id="syncText">Pronto para sincronizar</span>
+    <div style="font-size: 12px; margin-top: 0.5rem;">Funcionando offline</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('pedidos')">📋 Pedidos</button>
+    <button class="tab-btn" onclick="switchTab('clientes')">👥 Clientes</button>
+    <button class="tab-btn" onclick="switchTab('relatorios')">📈 Relatórios</button>
+  </div>
+
+  <div id="dashboard" class="tab-content active">
+    <h2 style="font-size: 16px; margin-bottom: 1rem;">Resumo</h2>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">Total Vendas</div><div class="metric-value" id="dashFaturamento">R$ 0</div></div>
+      <div class="metric-card"><div class="metric-label">Pedidos</div><div class="metric-value" id="dashPedidos">0</div></div>
+      <div class="metric-card"><div class="metric-label">Clientes</div><div class="metric-value" id="dashClientes">0</div></div>
+      <div class="metric-card"><div class="metric-label">Ticket Médio</div><div class="metric-value" id="dashTicket">R$ 0</div></div>
     </div>
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Últimos Pedidos</h2>
+    <div id="ultimosPedidos" class="record-list"></div>
   </div>
-  
-  <div class="content">
-    <iframe id="appFrame" class="iframe-wrapper" src="about:blank"></iframe>
+
+  <div id="pedidos" class="tab-content">
+    <h2 style="font-size: 16px; margin-bottom: 1rem;">Novo Pedido</h2>
+    <div class="form-group"><label>Data</label><input type="date" id="pedidoData" /></div>
+    <div class="form-group"><label>Cliente</label><input type="text" id="pedidoCliente" placeholder="Nome" /></div>
+    <div class="form-group"><label>Produto</label><input type="text" id="pedidoProduto" placeholder="Produto" /></div>
+    <div class="form-group"><label>Valor (R$)</label><input type="number" id="pedidoValor" min="0" step="0.01" /></div>
+    <button class="button" onclick="salvarPedido()">Registrar</button>
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Histórico</h2>
+    <div id="listaPedidos" class="record-list"></div>
+  </div>
+
+  <div id="clientes" class="tab-content">
+    <h2 style="font-size: 16px; margin-bottom: 1rem;">Novo Cliente</h2>
+    <div class="form-group"><label>Nome</label><input type="text" id="clienteNome" placeholder="Nome completo" /></div>
+    <div class="form-group"><label>Telefone</label><input type="tel" id="clienteTel" /></div>
+    <button class="button" onclick="salvarCliente()">Salvar</button>
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Clientes</h2>
+    <div id="listaClientes" class="record-list"></div>
+  </div>
+
+  <div id="relatorios" class="tab-content">
+    <h2 style="font-size: 16px; margin-bottom: 1rem;">Análise</h2>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">Faturamento</div><div class="metric-value" id="relFaturamento">R$ 0</div></div>
+      <div class="metric-card"><div class="metric-label">Pedidos</div><div class="metric-value" id="relPedidos">0</div></div>
+      <div class="metric-card"><div class="metric-label">Ticket Médio</div><div class="metric-value" id="relTicket">R$ 0</div></div>
+    </div>
+    <h2 style="font-size: 16px; margin-bottom: 1rem; margin-top: 1.5rem;">Top Clientes</h2>
+    <div id="topClientes" class="record-list"></div>
   </div>
 </div>
 
-<button class="settings-btn" onclick="openSettings()">⚙️</button>
+<script>
+let app = { pedidos: [], clientes: [] };
 
-<div id="modalSync" class="modal-sync">
-  <div class="modal-sync-content">
-    <div class="sync-spinner"></div>
-    <p>Sincronizando dados...</p>
-  </div>
-</div>
+function init() {
+  const saved = localStorage.getItem('bordaAltaApp');
+  if (saved) app = JSON.parse(saved);
+  atualizar();
+}
 
-<div id="modalSettings" class="modal-settings">
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tab).classList.add('active');
+  if (tab === 'relatorios') renderRelatorios();
+}
+
+function atualizar() {
+  const total = app.pedidos.reduce((s, p) => s + (p.valor || 0), 0);
+  document.getElementById('dashFaturamento').textContent = 'R$ ' + total.toFixed(2);
+  document.getElementById('dashPedidos').textContent = app.pedidos.length;
+  document.getElementById('dashClientes').textContent = new Set(app.pedidos.map(p => p.cliente)).size;
+  document.getElementById('dashTicket').textContent = 'R$ ' + (total / app.pedidos.length || 0).toFixed(2);
   
+  const ultimos = app.pedidos.slice(-5).reverse();
+  document.getElementById('ultimosPedidos').innerHTML = ultimos.map(p => `<div class="record-item"><div><div class="record-client">${p.cliente}</div><div class="record-details">${p.data} • ${p.produto}</div></div><div class="record-value">R$ ${p.valor.toFixed(2)}</div></div>`).join('') || '<div class="empty-state">Sem pedidos</div>';
+  
+  renderPedidos();
+  renderClientes();
+  salvar();
+}
+
+function salvarPedido() {
+  const data = document.getElementById('pedidoData').value;
+  const cliente = document.getElementById('pedidoCliente').value;
+  const produto = document.getElementById('pedidoProduto').value;
+  const valor = parseFloat(document.getElementById('pedidoValor').value) || 0;
+  if (!cliente || !produto || valor === 0) { alert('Preencha os campos'); return; }
+  app.pedidos.push({ id: Date.now(), data, cliente, produto, valor });
+  document.getElementById('pedidoData').value = document.getElementById('pedidoCliente').value = document.getElementById('pedidoProduto').value = document.getElementById('pedidoValor').value = '';
+  atualizar();
+}
+
+function renderPedidos() {
+  document.getElementById('listaPedidos').innerHTML = app.pedidos.reverse().map(p => `<div class="record-item"><div><div class="record-client">${p.cliente}</div><div class="record-details">${p.data} • ${p.produto}</div></div><div style="text-align: right;"><div class="record-value">R$ ${p.valor.toFixed(2)}</div><button class="btn-delete" onclick="deletarPedido(${p.id})">Deletar</button></div></div>`).join('') || '<div class="empty-state">Sem pedidos</div>';
+}
+
+function deletarPedido(id) {
+  if (confirm('Deletar?')) { app.pedidos = app.pedidos.filter(p => p.id !== id); atualizar(); }
+}
+
+function salvarCliente() {
+  const nome = document.getElementById('clienteNome').value;
+  if (!nome) { alert('Digite o nome'); return; }
+  if (!app.clientes.find(c => c.nome === nome)) {
+    app.clientes.push({ id: Date.now(), nome, telefone: document.getElementById('clienteTel').value });
+    document.getElementById('clienteNome').value = document.getElementById('clienteTel').value = '';
+    atualizar();
+  }
+}
+
+function renderClientes() {
+  document.getElementById('listaClientes').innerHTML = app.clientes.map(c => `<div class="record-item"><div class="record-client">${c.nome}</div><button class="btn-delete" onclick="deletarCliente(${c.id})">Deletar</button></div>`).join('') || '<div class="empty-state">Sem clientes</div>';
+}
+
+function deletarCliente(id) {
+  if (confirm('Deletar?')) { app.clientes = app.clientes.filter(c => c.id !== id); atualizar(); }
+}
+
+function renderRelatorios() {
+  const total = app.pedidos.reduce((s, p) => s + (p.valor || 0), 0);
+  document.getElementById('relFaturamento').textContent = 'R$ ' + total.toFixed(2);
+  document.getElementById('relPedidos').textContent = app.pedidos.length;
+  document.getElementById('relTicket').textContent = 'R$ ' + (total / app.pedidos.length || 0).toFixed(2);
+  
+  const clientesMap = {};
+  app.pedidos.forEach(p => { if (!clientesMap[p.cliente]) clientesMap[p.cliente] = 0; clientesMap[p.cliente] += p.valor; });
+  const topCli = Object.entries(clientesMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  document.getElementById('topClientes').innerHTML = topCli.map(([c, v]) => `<div class="record-item"><div class="record-client">${c}</div><div class="record-value">R$ ${v.toFixed(2)}</div></div>`).join('') || '<p class="empty-state">Sem dados</p>';
+}
+
+function salvar() {
+  localStorage.setItem('bordaAltaApp', JSON.stringify(app));
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
