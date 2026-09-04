@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#5A7D6E" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Borda Alta" />
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Padoca%20Borda%20Alta%20-%20Gest%C3%A3o%22,%22short_name%22:%22Borda%20Alta%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%235A7D6E%22,%22theme_color%22:%22%238B7355%22,%22orientation%22:%22portrait%22}" />
+<title>Borda Alta - Gestão</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --verde-musgo: #5A7D6E;
+  --kraft: #8B7355;
+  --branco: #FEFDFB;
+  --cinza-claro: #F5F3F0;
+  --cinza-escuro: #6B6B6B;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--branco);
+  color: var(--cinza-escuro);
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding-top: max(0px, env(safe-area-inset-top));
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.app-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  background: var(--verde-musgo);
+  color: var(--branco);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.header h1 { font-size: 18px; font-weight: 600; margin-bottom: 0.25rem; }
+.header .sync-status {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.sync-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: #90EE90;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+}
+
+.iframe-wrapper {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.modal-sync {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.modal-sync.active { display: flex; }
+
+.modal-sync-content {
+  background: var(--branco);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  max-width: 300px;
+}
+
+.sync-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--cinza-claro);
+  border-top: 3px solid var(--kraft);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 1rem;
+  right: 1rem;
+  background: var(--kraft);
+  color: var(--branco);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transform: translateY(200px);
+  transition: transform 0.3s ease;
+  z-index: 900;
+  padding-bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom)));
+}
+
+.toast.show { transform: translateY(0); }
+
+.settings-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--kraft);
+  color: var(--branco);
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+.settings-btn:active { transform: scale(0.95); }
+
+.modal-settings {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1001;
+  align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.modal-settings.active { display: flex; }
+
+.modal-settings-content {
+  background: var(--branco);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-bottom: max(1.5rem, calc(1.5rem + env(safe-area-inset-bottom)));
+  padding-right: max(0px, calc(1.5rem + env(safe-area-inset-right)));
+}
+
+.modal-settings-content h2 {
+  margin-bottom: 1rem;
+  color: var(--verde-musgo);
+  font-size: 18px;
+}
+
+.settings-group {
+  margin-bottom: 1.5rem;
+}
+
+.settings-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kraft);
+  margin-bottom: 0.5rem;
+}
+
+.settings-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--cinza-claro);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.settings-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--cinza-claro);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--verde-musgo);
+  color: var(--branco);
+}
+
+.btn-primary:active { opacity: 0.9; }
+
+.btn-secondary {
+  background: var(--cinza-claro);
+  color: var(--cinza-escuro);
+}
+
+.btn-secondary:active { opacity: 0.8; }
+
+.info-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="header">
+    <h1>🍞 Borda Alta</h1>
+    <p>Sistema de Gestão</p>
+    <div class="sync-status">
+      <span class="sync-indicator"></span>
+      <span id="syncText">Pronto para sincronizar</span>
+    </div>
+  </div>
+  
+  <div class="content">
+    <iframe id="appFrame" class="iframe-wrapper" src="about:blank"></iframe>
+  </div>
+</div>
+
+<button class="settings-btn" onclick="openSettings()">⚙️</button>
+
+<div id="modalSync" class="modal-sync">
+  <div class="modal-sync-content">
+    <div class="sync-spinner"></div>
+    <p>Sincronizando dados...</p>
+  </div>
+</div>
+
+<div id="modalSettings" class="modal-settings">
+  
